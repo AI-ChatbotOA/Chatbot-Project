@@ -1,13 +1,15 @@
 const express = require("express");
-const OpenAI = require("openai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
 require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+// Access your API key as an environment variable (see "Set up your API key" above)
+const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 app.use(express.json());
 
@@ -17,12 +19,9 @@ app.post("/chat", async (req, res) => {
 
   try {
     // Solicitud a la API de OpenAI
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: message }]
-    });
-
-    const reply = completion.choices[0].message.content;
+    const result = await model.generateContent(message);
+    const response = await result.response;
+    const reply = response.text();
     res.json({ reply });
   } catch (error) {
     console.error(error);
